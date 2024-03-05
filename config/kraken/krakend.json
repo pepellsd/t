@@ -1,0 +1,86 @@
+{
+    "version": 3,
+    "alg": "RS256",
+    "kid": "-7Hvb8QWjOwQgwy0wmyVBbQoXrojgo431AxBtsN17jA",
+    "extra_config": {
+        "github_com/devopsfaith/krakend-gologging": {
+            "level": "DEBUG",
+            "prefix": "[KRAKEND]",
+            "syslog": false,
+            "stdout": true,
+            "format": "default"
+        }
+    },
+    "timeout": "3000ms",
+    "cache_ttl": "300s",
+    "output_encoding": "json",
+    "name": "Test Service",
+    "endpoints": [
+        {
+            "endpoint": "/me",
+            "method": "GET",
+            "input_headers": ["*", "x-user", "x-roles"],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "kid": "-7Hvb8QWjOwQgwy0wmyVBbQoXrojgo431AxBtsN17jA",
+                    "jwk_url": "http://kk.localhost:8080/auth/realms/test/protocol/openid-connect/certs",
+                    "disable_jwk_security": true,
+                    "cache": true,
+                    "key_identify_strategy": "kid",
+                    "operation_debug": true,
+                    "propagate_claims": [ ["email", "x-user"], ["realm_access.roles", "x-roles"]]
+                }
+            },
+            "output_encoding": "json",
+            "concurrent_calls": 2,
+            "backend": [
+                {
+                    "url_pattern": "/me",
+                    "encoding": "json",
+                    "sd": "static",
+                    "extra_config": {},
+                    "host": [
+                        "http://api.localhost:8000"
+                    ],
+                    "disable_host_sanitize": false
+                }
+            ]
+        },
+        {
+            "endpoint": "/admin",
+            "method": "GET",
+            "headers_to_pass": [
+                "Authorization"
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "kid": "-7Hvb8QWjOwQgwy0wmyVBbQoXrojgo431AxBtsN17jA",
+                    "jwk_url": "http://kk.localhost:8080/auth/realms/test/protocol/openid-connect/certs",
+                    "disable_jwk_security": true,
+                    "cache": true,
+                    "key_identify_strategy": "kid",
+                    "operation_debug": true,
+                    "roles": [ "admin" ],
+                    "propagate_claims": [ ["sub", "x-user"], ["realm_access.roles", "x-roles"]]
+                }
+            },
+            "output_encoding": "json",
+            "concurrent_calls": 2,
+            "backend": [
+                {
+                    "url_pattern": "/admin",
+                    "encoding": "json",
+                    "sd": "static",
+                    "extra_config": {},
+                    "input_headers": ["*", "x-user", "x-roles"],
+                    "host": [
+                        "http://api.localhost:8000"
+                    ],
+                    "disable_host_sanitize": false
+                }
+            ]
+        }
+    ]
+}

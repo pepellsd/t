@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  keycloak:
+    image: jboss/keycloak:latest
+    volumes:
+    - ./config/keycloak/:/keycloak/:ro
+    ports:
+      - "8081:8080"
+    environment:
+      # Use the inbuilt h2 database for demo purposes
+      DB_VENDOR: h2
+      # Credentials for demo
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: password
+      # Set PROXY_ADDRESS_FORWARDING so that Keycloak knows it is behind a proxy
+      PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_HOME: /opt/jboss/keycloak
+    entrypoint: /keycloak/start.sh
+
+  kraken:
+    image: devopsfaith/krakend:latest
+    container_name: krakend
+    command: run -d -c /etc/krakend/krakend.json
+    ports:
+      - "8402:8080"
+    volumes:
+      - ./config/kraken:/etc/krakend
+    links:
+      - "keycloak:kk.localhost"
+      - "api:api.localhost"
+
+  krakend-designer:
+    image: devopsfaith/krakendesigner:latest
+    container_name: krakend-designer
+    ports:
+      - "8401:80"
+  api:
+    build: .
+    command: sh -c "python server.py"
+    ports:
+      - "8000:8000"
+
